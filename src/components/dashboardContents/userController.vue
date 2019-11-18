@@ -1,8 +1,13 @@
 <template>
     <v-container>   
         <v-card>
-            <v-container grid-list-md mb-0>
-                <h2 class="text-md-center">Data User</h2> 
+            <v-container>
+                <center>
+                  <h2 v-if="success < 0">ANDA BELUM LOGIN.!</h2>
+                </center>
+            </v-container>
+            <v-container grid-list-md mb-0 v-if="success > 0">
+                <h2 class="text-md-center">Data Pengguna 9403</h2> 
                 <v-layout row wrap style="margin:10px">
                     <v-flex xs6>
                         <v-btn depressed 
@@ -35,7 +40,7 @@
 
                 <template v-slot:body="{ items }">
                     <tbody>
-                        <tr v-for="(item,index) in items" :key="item.id"> 
+                        <tr v-for="(item,index) in items" :key="item.id">
                             <td>{{ index + 1 }}</td>
                             <td>{{ item.name }}</td>
                             <td>{{ item.email}}</td>
@@ -115,6 +120,7 @@ export default {
     data () {
         return {
             dialog: false,
+            success: 0,
             keyword: '',
             headers: [
                 {
@@ -156,11 +162,22 @@ export default {
     },
     methods:{
         getData(){
-            var uri = this.$apiUrl + '/user'
-            this.$http.get(uri).then(response =>{
-                this.users=response.data.message
-        })
-    },
+            var config = {
+                headers:{
+                    Authorization: 'Bearer ' + localStorage.getItem('token')
+                }
+            }
+                var uri = this.$apiUrl + '/user'
+                this.$http.get(uri,config).then(response =>{
+                    this.users=response.data.message
+
+                    if (response.data.message == "Unauthorized Access!")
+                        this.success = -1
+                    else
+                        this.success = 1
+                }) 
+                
+        },
 
         sendData(){
             this.user.append('name', this.form.name);
@@ -182,8 +199,8 @@ export default {
                 this.text = 'Try Again';
                 this.color = 'red';
                 this.load = false;
-        })
-    },
+            })
+        },
 
         updateData(){
             this.user.append('name', this.form.name);
@@ -200,14 +217,14 @@ export default {
                 this.resetForm();
                 this.typeInput = 'new';
             }).catch(error =>{
-            this.errors = error
-            this.snackbar = true;
-            this.text = 'Try Again';
-            this.color = 'red';
-            this.load = false;
-            this.typeInput = 'new';
-        })
-    },
+                this.errors = error
+                this.snackbar = true;
+                this.text = 'Try Again';
+                this.color = 'red';
+                this.load = false;
+                this.typeInput = 'new';
+            })
+        },
 
         editHandler(item){
             this.typeInput = 'edit';
@@ -216,7 +233,7 @@ export default {
             this.form.email = item.email;
             this.form.password = '',
             this.updatedId = item.id
-    },
+        },
 
         deleteData(deleteId){
             var uri=this.$apiUrl + '/user/' + deleteId;
@@ -226,21 +243,21 @@ export default {
                 this.color='green'
                 this.deleteDialog=false;
                 this.getData();
-                }).catch(error=>{
-                    this.errors=error 
-                    this.snackbar=true;
-                    this.text='Try Again';
-                    this.color='red';
-                })
-    },
-    
+            }).catch(error=>{
+                this.errors=error 
+                this.snackbar=true;
+                this.text='Try Again';
+                this.color='red';
+            })
+        },
+        
         setForm(){
             if (this.typeInput === 'new') {
                 this.sendData()
             } else { console.log("dddd")
                 this.updateData()
             }
-    },
+        },
 
         resetForm(){
             this.form = {
@@ -251,8 +268,8 @@ export default {
         }
     },
 
-        mounted(){
-            this.getData();
-        },
-    }
+    mounted(){
+        this.getData();
+    },
+}
 </script>
